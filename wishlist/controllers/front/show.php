@@ -50,7 +50,7 @@ class WishlistShowModuleFrontController extends ModuleFrontController {
         $sql->leftOuterJoin('cart_product','cp', 'wl.product_id = cp.id_product AND cp.id_cart = '.$this->context->cart->id);
         //$sql->innerJoin('category_product', 'ctp', 'wl.product_id = ctp.id_product');
         $sql->orderBy($orderBy);
-        $sql->where('id_lang = 1 AND position = 1');
+        $sql->where('id_lang = 1 AND position = 1 AND user_id = '.Configuration::get('wish-list-user'));
         //$sql->where('id_lang = 1 AND position = 1');
         return Db::getInstance()->executeS($sql);
     }
@@ -59,7 +59,7 @@ class WishlistShowModuleFrontController extends ModuleFrontController {
         if (Tools::getIsset('id')) {
             $idArray = explode(',', Tools::getValue('id'));
             foreach ($idArray as $id) {
-                Db::getInstance()->delete('wish_list', 'product_id = '.$id , 1);
+                Db::getInstance()->delete('wish_list', 'product_id = '.$id.' AND user_id = '.Configuration::get('wish-list-user'), 1);
             }
             //Tools::redirect('/prestashop/ru/cart?action=show');
         }

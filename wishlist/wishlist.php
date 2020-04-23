@@ -84,7 +84,9 @@ class Wishlist extends Module implements \PrestaShop\PrestaShop\Core\Module\Widg
     public function uninstall() {
         if (!parent::uninstall() ||
             !$this->uninstallTab('AdminWishlist') ||
-            !Db::getInstance()->execute('DROP TABLE IF EXISTS `'._DB_PREFIX_.'wish_list`')
+            !Db::getInstance()->execute('DROP TABLE IF EXISTS `'._DB_PREFIX_.'wish_list`') ||
+            !Configuration::deleteByName('wish-list-user') ||
+            !Configuration::deleteByName('urlFrontController')
         ) {
             return false;
         }
@@ -98,28 +100,21 @@ class Wishlist extends Module implements \PrestaShop\PrestaShop\Core\Module\Widg
 
 
     public function getWidgetVariables($hookName, array $configuration) {
-
-
         $inList = false;
-        $message = false;
         $id = Tools::getValue('id_product');
-        if (Tools::isSubmit('remove')) {
-            $sql = 'DELETE FROM '._DB_PREFIX_.'wish_list WHERE product_id = '.(int)$id;
-            Db::getInstance()->execute($sql);
-        }
-        $sql = 'SELECT * FROM '._DB_PREFIX_.'wish_list WHERE product_id = '.(int)Tools::getValue('id_product');
+        $sql = 'SELECT * FROM '._DB_PREFIX_.'wish_list WHERE product_id = '.(int)Tools::getValue('id_product').' AND user_id = '.Configuration::get('wish-list-user');
         $inList = count(Db::getInstance()->executeS($sql)) > 0 ? true : false;
 
         return array(
             'inList' => $inList,
             'controller' => Tools::getValue('controller'),
-            'urlFrontController' => Configuration::get('urlFrontController')
+            'urlFrontController' => Configuration::get('urlFrontController'),
         );
     }
 
     public function addToWishList() {
         $id = Tools::getValue('id_product');
-        $customerId = $this->context->customer->id ?: '0';
+        $customerId = Configuration::get('wish-list-user');
         if (Tools::isSubmit('name')) {
             if (Tools::isSubmit('id-to-c')) {
                 $id = Tools::getValue('id-to-c');
@@ -140,7 +135,7 @@ class Wishlist extends Module implements \PrestaShop\PrestaShop\Core\Module\Widg
     }
 
     public function hookDisplayNav2() {
-        $sql = 'SELECT * FROM '._DB_PREFIX_.'wish_list';
+        $sql = 'SELECT * FROM '._DB_PREFIX_.'wish_list WHERE user_id = '.Configuration::get('wish-list-user');
         $wishList = Db::getInstance()->executeS($sql);
         $wishListIds = '';
         foreach ($wishList as $id) {
@@ -155,7 +150,7 @@ class Wishlist extends Module implements \PrestaShop\PrestaShop\Core\Module\Widg
         ));
         return $this->display(__FILE__, 'views/templates/hook/WishListNav.tpl');
     }
-    public function hookDisplayHeader() {        
+    public function hookDisplayHeader() {
        if (!$this->context->cart->id) {
            $cart = new Cart();
            $cart->id_customer = (int)($this->context->cookie->id_customer);
@@ -170,6 +165,9 @@ class Wishlist extends Module implements \PrestaShop\PrestaShop\Core\Module\Widg
            $this->context->cookie->id_cart = (int)($cart->id);
            $cart->update();
        }
+        $user = $this->context->customer->id ?: (int)$this->context->cookie->id_cart;
+        Configuration::updateValue('wish-list-user', $user);    
+
         $this->addToWishList();
         $this->context->controller->addCSS($this->_path.'views/css/wishlist.css');
         $this->context->controller->addJS($this->_path.'views/js/wishlist.js');
