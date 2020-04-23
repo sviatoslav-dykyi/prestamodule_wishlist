@@ -4,9 +4,9 @@
 
     <div class="content-list-module">
         <div class="row">
-            <div class="col-md-5">
+            <div class="col-md-6">
                 <div class="alert alert-warning alert-wishlist" role="alert">
-                    <p class="alert-text"><span class="list__products-amount"></span> <span class="item-correct">items</span>. Total amount: <span class="list__products-price"></span> ₴
+                    <p class="alert-text wishlist-p"><span class="list__products-amount"></span> <span class="item-correct">items</span>. Total amount: <span class="list__products-price"></span> ₴
                     </p>
                     <div class="form-cont-wishlist">
                         <form action="" method="post">
@@ -19,7 +19,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-5">
+            <div class="col-md-4">
                 <div class="del-outside">Delete</div>
             </div>
             <div class="col-md-2">

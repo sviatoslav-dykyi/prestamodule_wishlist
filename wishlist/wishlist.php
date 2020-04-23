@@ -119,18 +119,19 @@ class Wishlist extends Module implements \PrestaShop\PrestaShop\Core\Module\Widg
             if (Tools::isSubmit('id-to-c')) {
                 $id = Tools::getValue('id-to-c');
             }
-            $data = explode('|', Tools::getValue('name'));
-            $wishList = new WishlistClass();
-            $wishList->user_id = $customerId;
-            $customerFirstName = $this->context->customer->firstname ?: 'unknown';
-            $customerLastName = $this->context->customer->lastname ?: '';
-            $wishList->user_name = $customerFirstName.' '.$customerLastName;
-            $wishList->product_id = $id;
-            $wishList->dt = date("Y-m-d H:i:s");
-            $wishList->product_title = $data[0];
-            $wishList->product_link = $data[1];
-            $wishList->save();
-
+            if (!in_array($id, $this->getWishListIdArray())) {
+                $data = explode('|', Tools::getValue('name'));
+                $wishList = new WishlistClass();
+                $wishList->user_id = $customerId;
+                $customerFirstName = $this->context->customer->firstname ?: 'unknown';
+                $customerLastName = $this->context->customer->lastname ?: '';
+                $wishList->user_name = $customerFirstName.' '.$customerLastName;
+                $wishList->product_id = $id;
+                $wishList->dt = date("Y-m-d H:i:s");
+                $wishList->product_title = $data[0];
+                $wishList->product_link = $data[1];
+                $wishList->save();
+            }
         }
     }
 
@@ -150,7 +151,19 @@ class Wishlist extends Module implements \PrestaShop\PrestaShop\Core\Module\Widg
         ));
         return $this->display(__FILE__, 'views/templates/hook/WishListNav.tpl');
     }
+
+    public function getWishListIdArray() {
+        $sql = 'SELECT * FROM '._DB_PREFIX_.'wish_list WHERE user_id = '.Configuration::get('wish-list-user');
+        $rows = Db::getInstance()->executeS($sql);
+        $wishListIds = [];
+        foreach ($rows as $row) {
+            $wishListIds[] = $row['product_id'];
+        }
+        return $wishListIds;
+    }
+
     public function hookDisplayHeader() {
+
        if (!$this->context->cart->id) {
            $cart = new Cart();
            $cart->id_customer = (int)($this->context->cookie->id_customer);

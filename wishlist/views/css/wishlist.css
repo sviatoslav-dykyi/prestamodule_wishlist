@@ -228,11 +228,10 @@
 }
 .alert-wishlist{
     position: relative;
+    display: flex;
 }
-.form-cont-wishlist{
-    position: absolute;
-    top: 13px;
-    right: 15px;
+.wishlist-p{
+    margin-right: auto;
 }
 .wishlist-prod-title{
     min-height: 50px;
